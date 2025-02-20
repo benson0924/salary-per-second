@@ -42,7 +42,7 @@
             let seconds = times % 60;
 
             let formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            document.getElementById("output").innerHTML = `累計薪水: $${totalSalary.toFixed(2)}<br>累計時數: ${formattedTime}`;
+            document.getElementById("output").innerHTML = `累計薪水: $${totalSalary.toFixed(4)}<br>累計時數: ${formattedTime}`;
         }
     </script>
 </body>
