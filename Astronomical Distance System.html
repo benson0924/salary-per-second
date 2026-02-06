@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astronomical Distance Calculation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --bg-elevated: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-tertiary: #86868b;
+            --border-color: #d2d2d7;
+            --accent-color: #0071e3;
+            --accent-hover: #0077ed;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-elevated: #2c2c2e;
+            --text-primary: #f5f5f7;
+            --text-secondary: #98989d;
+            --text-tertiary: #6e6e73;
+            --border-color: #424245;
+            --accent-color: #0a84ff;
+            --accent-hover: #409cff;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 0;
+        }
+
+        [data-theme="dark"] header {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button, select {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover, select:hover {
+            background: var(--border-color);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'SF Mono', 'Menlo', monospace;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] select:focus,
+        [data-theme="dark"] textarea:focus {
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+        }
+
+        #canvas {
+            width: 100%;
+            height: 500px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .result-item {
+            background: var(--bg-secondary);
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .history-item {
+            background: var(--bg-secondary);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .history-value {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin: 4px 0;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border-color);
+            outline: none;
+            -webkit-appearance: none;
+            padding: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .batch-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .batch-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <header>
+        <div class="header-content">
+            <h1 id="title">Astronomical Distance Calculator</h1>
+            <div class="controls">
+                <select id="langSelect">
+                    <option value="en">English</option>
+                    <option value="zh">繁體中文</option>
+                    <option value="ja">日本語</option>
+                </select>
+                <button id="themeToggle">Dark Mode</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <h2 class="card-title" id="converterTitle">Unit Converter</h2>
+                <div class="form-group">
+                    <label id="inputLabel">Input Value</label>
+                    <input type="number" id="inputValue" step="any" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label id="unitLabel">Unit</label>
+                    <select id="inputUnit">
+                        <option value="parsec">Parsec (pc)</option>
+                        <option value="lightyear">Light Year (ly)</option>
+                        <option value="au">Astronomical Unit (AU)</option>
+                        <option value="kilometer">Kilometer (km)</option>
+                        <option value="mile">Mile (mi)</option>
+                    </select>
+                </div>
+                <button class="btn-primary" style="width: 100%;" onclick="convert()" id="convertBtn">Convert</button>
+                <div id="results"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title" id="vizTitle">Solar System Visualization</h2>
+                <div class="slider-container">
+                    <label id="scaleLabel">Scale:</label>
+                    <input type="range" id="scaleSlider" min="10" max="100" value="40">
+                    <span class="slider-value" id="scaleValue">40</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <button onclick="toggleAnimation()" id="animBtn">Start</button>
+                    <button onclick="resetView()">Reset</button>
+                </div>
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title" id="historyTitle">Conversion History</h2>
+                <div style="max-height: 400px; overflow-y: auto;" id="historyContainer">
+                    <div class="empty-state" id="emptyHistory">No conversions yet</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title" id="refTitle">Reference Distances</h2>
+                <div id="referenceList"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2 class="card-title" id="batchTitle">Batch Processing</h2>
+                <div class="batch-grid">
+                    <div class="form-group">
+                        <label id="batchInputLabel">Input (one per line)</label>
+                        <textarea id="batchInput" placeholder="1.0&#10;5.0&#10;10.0"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label id="batchOutputLabel">Results</label>
+                        <textarea id="batchOutput" readonly></textarea>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="processBatch()" id="batchBtn">Process</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONSTANTS = {
+            parsec: 3.0856775814913673e13,
+            lightyear: 9.4607304725808e12,
+            au: 1.495978707e8,
+            kilometer: 1,
+            mile: 1.609344
+        };
+
+        const PLANETS = [
+            { name: { en: "Sun", zh: "太陽", ja: "太陽" }, color: "#FDB813", radius: 15, distance: 0 },
+            { name: { en: "Mercury", zh: "水星", ja: "水星" }, color: "#8C7853", radius: 4, distance: 57.9 },
+            { name: { en: "Venus", zh: "金星", ja: "金星" }, color: "#FFC649", radius: 8, distance: 108.2 },
+            { name: { en: "Earth", zh: "地球", ja: "地球" }, color: "#4A90E2", radius: 8, distance: 149.6 },
+            { name: { en: "Mars", zh: "火星", ja: "火星" }, color: "#E27B58", radius: 5, distance: 227.9 },
+            { name: { en: "Jupiter", zh: "木星", ja: "木星" }, color: "#C88B3A", radius: 18, distance: 778.5 },
+            { name: { en: "Saturn", zh: "土星", ja: "土星" }, color: "#FAD5A5", radius: 16, distance: 1432 },
+            { name: { en: "Uranus", zh: "天王星", ja: "天王星" }, color: "#4FD0E0", radius: 12, distance: 2867 },
+            { name: { en: "Neptune", zh: "海王星", ja: "海王星" }, color: "#4166F5", radius: 12, distance: 4515 }
+        ];
+
+        const REFERENCES = [
+            { name: { en: "Earth to Moon", zh: "地球到月球", ja: "地球から月" }, value: 384400, unit: "kilometer" },
+            { name: { en: "Earth to Sun", zh: "地球到太陽", ja: "地球から太陽" }, value: 1, unit: "au" },
+            { name: { en: "Proxima Centauri", zh: "比鄰星", ja: "プロキシマケンタウリ" }, value: 1.3009, unit: "parsec" },
+            { name: { en: "Sirius", zh: "天狼星", ja: "シリウス" }, value: 2.637, unit: "parsec" },
+            { name: { en: "Milky Way Center", zh: "銀河中心", ja: "銀河中心" }, value: 8178, unit: "parsec" }
+        ];
+
+        const TRANSLATIONS = {
+            en: {
+                title: "Astronomical Distance Calculator",
+                converterTitle: "Unit Converter",
+                inputLabel: "Input Value",
+                unitLabel: "Unit",
+                convertBtn: "Convert",
+                vizTitle: "Solar System Visualization",
+                scaleLabel: "Scale:",
+                animBtn: "Start",
+                historyTitle: "Conversion History",
+                emptyHistory: "No conversions yet",
+                refTitle: "Reference Distances",
+                batchTitle: "Batch Processing",
+                batchInputLabel: "Input (one per line)",
+                batchOutputLabel: "Results",
+                batchBtn: "Process"
+            },
+            zh: {
+                title: "天文距離計算系統",
+                converterTitle: "單位轉換器",
+                inputLabel: "輸入值",
+                unitLabel: "單位",
+                convertBtn: "轉換",
+                vizTitle: "太陽系視覺化",
+                scaleLabel: "比例：",
+                animBtn: "開始",
+                historyTitle: "轉換歷史",
+                emptyHistory: "尚無轉換記錄",
+                refTitle: "參考距離",
+                batchTitle: "批量處理",
+                batchInputLabel: "輸入（每行一個）",
+                batchOutputLabel: "結果",
+                batchBtn: "處理"
+            },
+            ja: {
+                title: "天文距離計算システム",
+                converterTitle: "単位変換器",
+                inputLabel: "入力値",
+                unitLabel: "単位",
+                convertBtn: "変換",
+                vizTitle: "太陽系可視化",
+                scaleLabel: "スケール：",
+                animBtn: "開始",
+                historyTitle: "変換履歴",
+                emptyHistory: "変換履歴がありません",
+                refTitle: "参照距離",
+                batchTitle: "バッチ処理",
+                batchInputLabel: "入力（1行に1つ）",
+                batchOutputLabel: "結果",
+                batchBtn: "処理"
+            }
+        };
+
+        let currentLang = 'en';
+        let history = [];
+        let canvas, ctx;
+        let scale = 40;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let animating = false;
+        let animId = null;
+        let planetAngles = PLANETS.map(() => Math.random() * Math.PI * 2);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCanvas();
+            renderReferences();
+            updateLanguage('en');
+
+            document.getElementById('langSelect').addEventListener('change', (e) => {
+                updateLanguage(e.target.value);
+            });
+
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            document.getElementById('scaleSlider').addEventListener('input', (e) => {
+                scale = parseInt(e.target.value);
+                document.getElementById('scaleValue').textContent = scale;
+                drawSolarSystem();
+            });
+
+            document.getElementById('inputValue').addEventListener('input', () => {
+                if (document.getElementById('inputValue').value) {
+                    convert();
+                }
+            });
+
+            document.getElementById('inputUnit').addEventListener('change', () => {
+                if (document.getElementById('inputValue').value) {
+                    convert();
+                }
+            });
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                const rect = canvas.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left - offsetX;
+                dragStartY = e.clientY - rect.top - offsetY;
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const rect = canvas.getBoundingClientRect();
+                offsetX = e.clientX - rect.left - dragStartX;
+                offsetY = e.clientY - rect.top - dragStartY;
+                drawSolarSystem();
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+
+            drawSolarSystem();
+        });
+
+        function initCanvas() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            drawSolarSystem();
+        }
+
+        function drawSolarSystem() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+            const cx = w / 2 + offsetX;
+            const cy = h / 2 + offsetY;
+
+            ctx.clearRect(0, 0, w, h);
+
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-color');
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+
+            PLANETS.slice(1).forEach(planet => {
+                const r = planet.distance * scale * 0.1;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+
+            ctx.setLineDash([]);
+
+            PLANETS.forEach((planet, i) => {
+                let x, y;
+                if (i === 0) {
+                    x = cx;
+                    y = cy;
+                } else {
+                    const angle = planetAngles[i];
+                    const r = planet.distance * scale * 0.1;
+                    x = cx + Math.cos(angle) * r;
+                    y = cy + Math.sin(angle) * r;
+                }
+
+                ctx.fillStyle = planet.color;
+                ctx.beginPath();
+                ctx.arc(x, y, planet.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary');
+                ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(planet.name[currentLang], x, y + planet.radius + 14);
+            });
+        }
+
+        function toggleAnimation() {
+            animating = !animating;
+            const btn = document.getElementById('animBtn');
+            
+            if (animating) {
+                btn.textContent = currentLang === 'zh' ? '停止' : currentLang === 'ja' ? '停止' : 'Stop';
+                animate();
+            } else {
+                btn.textContent = TRANSLATIONS[currentLang].animBtn;
+                if (animId) cancelAnimationFrame(animId);
+            }
+        }
+
+        function animate() {
+            if (!animating) return;
+
+            PLANETS.forEach((planet, i) => {
+                if (i > 0) {
+                    planetAngles[i] += 0.001 / i;
+                }
+            });
+
+            drawSolarSystem();
+            animId = requestAnimationFrame(animate);
+        }
+
+        function resetView() {
+            offsetX = 0;
+            offsetY = 0;
+            scale = 40;
+            document.getElementById('scaleSlider').value = 40;
+            document.getElementById('scaleValue').textContent = 40;
+            drawSolarSystem();
+        }
+
+        function toggleTheme() {
+            const current = document.body.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+            drawSolarSystem();
+        }
+
+        function updateLanguage(lang) {
+            currentLang = lang;
+            const t = TRANSLATIONS[lang];
+
+            Object.keys(t).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = t[key];
+                    } else {
+                        el.textContent = t[key];
+                    }
+                }
+            });
+
+            renderReferences();
+            if (history.length > 0) renderHistory();
+            drawSolarSystem();
+        }
+
+        function convert() {
+            const value = parseFloat(document.getElementById('inputValue').value);
+            const unit = document.getElementById('inputUnit').value;
+
+            if (isNaN(value) || value < 0) return;
+
+            const km = value * CONSTANTS[unit];
+
+            const results = {
+                parsec: km / CONSTANTS.parsec,
+                lightyear: km / CONSTANTS.lightyear,
+                au: km / CONSTANTS.au,
+                kilometer: km,
+                mile: km / CONSTANTS.mile
+            };
+
+            displayResults(results, unit);
+            addToHistory(value, unit, results);
+        }
+
+        function displayResults(results, inputUnit) {
+            const container = document.getElementById('results');
+            const units = [
+                { key: 'parsec', label: 'Parsec', symbol: 'pc' },
+                { key: 'lightyear', label: 'Light Year', symbol: 'ly' },
+                { key: 'au', label: 'AU', symbol: 'AU' },
+                { key: 'kilometer', label: 'Kilometer', symbol: 'km' },
+                { key: 'mile', label: 'Mile', symbol: 'mi' }
+            ];
+
+            let html = '<div class="result-grid">';
+            units.forEach(unit => {
+                if (unit.key !== inputUnit) {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-label">${unit.label}</div>
+                            <div class="result-value">${formatNumber(results[unit.key])} ${unit.symbol}</div>
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function formatNumber(num) {
+            if (Math.abs(num) >= 1e6 || (Math.abs(num) < 0.001 && num !== 0)) {
+                return num.toExponential(6);
+            }
+            return num.toLocaleString('en-US', { maximumFractionDigits: 6 });
+        }
+
+        function addToHistory(value, unit, results) {
+            history.unshift({
+                time: new Date().toLocaleString(),
+                input: value,
+                unit: unit,
+                results: results
+            });
+
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = '<div class="empty-state" id="emptyHistory">' + TRANSLATIONS[currentLang].emptyHistory + '</div>';
+                return;
+            }
+
+            let html = '';
+            history.forEach(item => {
+                html += `
+                    <div class="history-item">
+                        <div class="history-time">${item.time}</div>
+                        <div class="history-value">${formatNumber(item.input)} ${item.unit}</div>
+                        <div class="history-value">${formatNumber(item.results.lightyear)} ly | ${formatNumber(item.results.parsec)} pc</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderReferences() {
+            const container = document.getElementById('referenceList');
+            let html = '';
+
+            REFERENCES.forEach(ref => {
+                const km = ref.value * CONSTANTS[ref.unit];
+                const ly = km / CONSTANTS.lightyear;
+                html += `
+                    <div class="history-item" style="cursor: pointer;" onclick="loadReference(${ref.value}, '${ref.unit}')">
+                        <div class="history-value">${ref.name[currentLang]}</div>
+                        <div class="history-time">${formatNumber(ref.value)} ${ref.unit} (${formatNumber(ly)} ly)</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function loadReference(value, unit) {
+            document.getElementById('inputValue').value = value;
+            document.getElementById('inputUnit').value = unit;
+            convert();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function processBatch() {
+            const input = document.getElementById('batchInput').value;
+            const unit = document.getElementById('inputUnit').value;
+
+            if (!input.trim()) return;
+
+            const values = input.split('\n')
+                .map(v => parseFloat(v.trim()))
+                .filter(v => !isNaN(v) && v >= 0);
+
+            if (values.length === 0) return;
+
+            let output = '';
+            values.forEach(value => {
+                const km = value * CONSTANTS[unit];
+                const ly = km / CONSTANTS.lightyear;
+                const pc = km / CONSTANTS.parsec;
+                output += `${formatNumber(value)} ${unit} → ${formatNumber(ly)} ly | ${formatNumber(pc)} pc\n`;
+            });
+
+            document.getElementById('batchOutput').value = output;
+        }
+    </script>
+</body>
+</html>
